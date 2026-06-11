@@ -11,11 +11,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+SECRET_KEY = config('SECRET_KEY', default='ta-cle-actuelle')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -27,12 +30,14 @@ SECRET_KEY = 'django-insecure-qz=t5s*7m_xy$o-6a))@a(kfsca_xt6sa4^3o^bg8(_xzzbf^8
 # DEBUG = False
 
 # ALLOWED_HOSTS = ['*']
-import os
 
-DEBUG = False
+
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
-    ".onrender.com"
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',  # autorise tous les sous-domaines Render
 ]
 
 
@@ -44,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'comptes',
     'rest_framework',
     'corsheaders',
@@ -52,6 +56,8 @@ INSTALLED_APPS = [
     'django_filters',
     'candidats',
     'vote',
+    'whitenoise.runserver_nostatic',  # ← ajoute en premier si présent
+    'django.contrib.staticfiles',
 ]
 
 MIDDLEWARE = [
@@ -90,12 +96,11 @@ WSGI_APPLICATION = 'votify_backend.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600,
+    )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -131,9 +136,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'# *
 AUTH_USER_MODEL = 'comptes.User'
 # REST_FRAMEWORK = {
 #     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -176,7 +182,8 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 # EMAIL_HOST_PASSWORD = 'cncg crvr jpbg bhxg'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
+    'http://localhost:4200',
+    'https://ton-projet.vercel.app', 
 ]
 # 1. Dit à Django d'autoriser l'authentification via l'adresse email
 AUTHENTICATION_BACKENDS = [
@@ -191,3 +198,5 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'email',      #  Indique que l'ID du token est l'email
     'USER_ID_CLAIM': 'user_id',
 } 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
