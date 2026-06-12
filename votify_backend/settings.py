@@ -15,16 +15,15 @@ import os
 import dj_database_url
 from decouple import config
 from pathlib import Path
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='ta-cle-actuelle')
+SECRET_KEY = config('SECRET_KEY')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qz=t5s*7m_xy$o-6a))@a(kfsca_xt6sa4^3o^bg8(_xzzbf^8'
+# SECRET_KEY = 'django-insecure-qz=t5s*7m_xy$o-6a))@a(kfsca_xt6sa4^3o^bg8(_xzzbf^8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #modification pour heberger
@@ -98,6 +97,7 @@ WSGI_APPLICATION = 'votify_backend.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
+        default=config('DATABASE_URL'),
         conn_max_age=600,
         ssl_require=True
     )
@@ -173,10 +173,10 @@ EMAIL_PORT = 587
 
 EMAIL_USE_TLS = True
 
-import os
 
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # EMAIL_HOST_USER = 'laetitiamaelle740@gmail.com'
 
@@ -184,7 +184,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
-    'https://ton-projet.vercel.app', 
+    'https://votify-frontend-eight.vercel.app',  #  vrai URL Vercel
 ]
 # 1. Dit à Django d'autoriser l'authentification via l'adresse email
 AUTHENTICATION_BACKENDS = [
