@@ -177,10 +177,11 @@ DEFAULT_FROM_EMAIL = 'onboarding@resend.dev'
 
 # EMAIL_HOST_PASSWORD = 'cncg crvr jpbg bhxg'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:4200',
-    'https://votify-frontend-eight.vercel.app',  #  vrai URL Vercel
-]
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:4200',
+#     'https://votify-frontend-eight.vercel.app',  #  vrai URL Vercel
+# ]
+CORS_ALLOW_ALL_ORIGINS = True
 # 1. Dit à Django d'autoriser l'authentification via l'adresse email
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
