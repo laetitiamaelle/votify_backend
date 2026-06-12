@@ -2,8 +2,26 @@
 from rest_framework import serializers
 from .models import User, DemandeAdmin
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.core.mail import send_mail
-from .services import generate_password  
+from django.conf import settings
+from .services import generate_password
+import resend
+
+
+ADMIN_EMAIL = 'wandjikamdemlaetitiamaelle@gmail.com'
+
+
+def send_resend_email(subject, message, recipient_info):
+    """Envoie un email via Resend. recipient_info = pour les logs seulement."""
+    resend.api_key = settings.RESEND_API_KEY
+    try:
+        resend.Emails.send({
+            'from': 'onboarding@resend.dev',
+            'to': ADMIN_EMAIL,
+            'subject': subject,
+            'text': message
+        })
+    except Exception as e:
+        print(f"Erreur envoi email : {e}")
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -18,7 +36,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data['email']
         first_name = validated_data.get('first_name', '')
-        
+
         generated_username = email.split('@')[0]
         if User.objects.filter(username=generated_username).exists():
             import uuid
@@ -37,21 +55,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             must_change_password=True
         )
 
-        send_mail(
-            subject='Votre compte Électeur Votify',
-            message=f'''Bonjour {first_name},
+        send_resend_email(
+            subject=f'[Votify] Nouveau compte électeur : {first_name}',
+            message=f'''Nouveau compte électeur créé sur Votify.
 
-Votre compte électeur a été créé avec succès sur l'application Votify.
-
-Voici vos paramètres de connexion :
+Prénom : {first_name}
 Email : {email}
 Mot de passe temporaire : {password}
 
-Veuillez modifier votre mot de passe dès votre première connexion pour sécuriser votre accès.
+Communiquez ces identifiants à l'électeur.
 ''',
-            from_email='onboarding@resend.dev',
-            recipient_list=[email],
-            fail_silently=True
+            recipient_info=email
         )
 
         return user

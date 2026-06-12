@@ -3,8 +3,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
+import resend
 
 from .models import User, DemandeAdmin
 from .serializers import (
@@ -20,12 +21,21 @@ try:
 except ImportError:
     Scrutin = None
 
-try:
-    from vote.models import InscriptionScrutin
-except ImportError:
-    InscriptionScrutin = None
+ADMIN_EMAIL = 'wandjikamdemlaetitiamaelle@gmail.com'
 
-FROM_EMAIL = 'onboarding@resend.dev'
+
+def send_resend_email(subject, message):
+    resend.api_key = settings.RESEND_API_KEY
+    try:
+        resend.Emails.send({
+            'from': 'onboarding@resend.dev',
+            'to': ADMIN_EMAIL,
+            'subject': subject,
+            'text': message
+        })
+    except Exception as e:
+        print(f"Erreur envoi email : {e}")
+
 
 # ── Compte électeur ───────────────────────────────────────
 
@@ -77,12 +87,14 @@ class ModifierProfilView(APIView):
             'telephone': user.telephone,
         })
 
+
 # ── JWT ───────────────────────────────────────────────────
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
 
 # ── Demandes admin ────────────────────────────────────────
 
@@ -114,21 +126,16 @@ class ValiderDemandeAdminView(APIView):
         )
         demande.statut = 'acceptee'
         demande.save()
-        send_mail(
-            subject='Compte administrateur Votify',
-            message=f'''Bonjour {demande.nom},
+        send_resend_email(
+            subject=f'[Votify] Compte admin validé : {demande.nom}',
+            message=f'''Demande admin acceptée.
 
-Votre demande administrateur a été acceptée sur l'app Votify.
-Vous pouvez désormais créer et gérer vos scrutins.
-
+Nom : {demande.nom}
 Email : {demande.email}
 Mot de passe : {password}
 
-Veuillez modifier votre mot de passe après connexion.
-''',
-            from_email=FROM_EMAIL,
-            recipient_list=[demande.email],
-            fail_silently=True
+Communiquez ces identifiants à l'administrateur.
+'''
         )
         return Response({'message': 'Compte administrateur créé avec succès'})
 
@@ -140,20 +147,18 @@ class RefuserDemandeAdminView(APIView):
         demande = DemandeAdmin.objects.get(id=pk)
         demande.statut = 'refusee'
         demande.save()
-        send_mail(
-            subject='Demande administrateur refusée',
-            message=f'''Bonjour {demande.nom},
+        send_resend_email(
+            subject=f'[Votify] Demande admin refusée : {demande.nom}',
+            message=f'''Demande admin refusée.
 
-Votre demande d'accès administrateur à Votify a été refusée.
-Vous pouvez contacter le support pour plus d'informations au 693823659.
+Nom : {demande.nom}
+Email : {demande.email}
 
-Votify.
-''',
-            from_email=FROM_EMAIL,
-            recipient_list=[demande.email],
-            fail_silently=True
+Vous pouvez contacter le demandeur pour l'informer.
+'''
         )
         return Response({'message': 'Demande refusée'})
+
 
 # ── SuperAdmin ────────────────────────────────────────────
 
@@ -187,21 +192,16 @@ class CreerAdminDirectView(APIView):
             cni=cni,
             must_change_password=True
         )
-        send_mail(
-            subject='Votre compte Administrateur Votify',
-            message=f'''Bonjour {nom},
+        send_resend_email(
+            subject=f'[Votify] Nouveau compte admin : {nom}',
+            message=f'''Nouveau compte administrateur créé.
 
-Un compte administrateur a été créé pour vous par le Super Administrateur sur Votify.
-
-Vos paramètres de connexion :
+Nom : {nom}
 Email : {email}
 Mot de passe temporaire : {password}
 
-Veuillez modifier votre mot de passe dès votre première connexion.
-''',
-            from_email=FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=True
+Communiquez ces identifiants à l'administrateur.
+'''
         )
         return Response({
             'message': 'Compte administrateur créé avec succès',
