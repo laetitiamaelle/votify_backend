@@ -173,6 +173,8 @@ EMAIL_HOST_USER = 'resend'
 EMAIL_HOST_PASSWORD = config('RESEND_API_KEY')
 DEFAULT_FROM_EMAIL = 'onboarding@resend.dev'
 
+RESEND_API_KEY = config('RESEND_API_KEY')
+
 # EMAIL_HOST_USER = 'laetitiamaelle740@gmail.com'
 
 # EMAIL_HOST_PASSWORD = 'cncg crvr jpbg bhxg'
